@@ -74,8 +74,10 @@ Decided: an install script for v0; a Go binary after v0 (step 9).
 - `goal.txt` is still untracked: the README now states the goal, so decide whether to commit or delete it.
 - **Check:** `python3 -m unittest discover -s tests -v` from the repo root. Needs `jq`; no network.
 
-### 8. Ship v0
-- Tag `v0.1.0`, publish the install line, try it on a clean machine.
+### 8. Ship v0 — ✅ done
+- Merged to `master`, repo made public with a description and topics, tagged `v0.1.0`.
+- The install line was run from GitHub into empty folders and produced a correct install.
+- **Still worth doing once:** run the install line on a second machine that has never had post-master.
 
 ### 9. Move to a Go binary (after v0)
 - Rewrite the runner and server in Go with jq built in: one downloaded file, zero dependencies.
@@ -92,7 +94,7 @@ Decided: an install script for v0; a Go binary after v0 (step 9).
 | 5 | Folder picker in UI ✅ | M | 2 |
 | 6 | Example + README ✅ | S | 3, 5 |
 | 7 | Tests, license ✅ (run pending) | M | 1 |
-| 8 | Release | S | 1–7 |
+| 8 | Release ✅ | S | 1–7 |
 | 9 | Go binary | L | 8 |
 
 ## After v0 (not now)
