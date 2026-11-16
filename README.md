@@ -75,4 +75,9 @@ environment-variable name and never written to these files.
 - `skills/api-testing/scripts/post_master.py` — the `post-master` command
 - `skills/api-testing/scripts/viewer.html` — the review UI
 - `examples/httpbin/` — the example suite
+- `tests/` — tests for the runner: `python3 -m unittest discover -s tests -v`
 - `ROADMAP.md` — what is planned
+
+## License
+
+MIT — see `LICENSE`.

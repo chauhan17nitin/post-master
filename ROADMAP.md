@@ -66,10 +66,13 @@ Decided: an install script for v0; a Go binary after v0 (step 9).
 - **Still to do:** add a screenshot of the UI to the README. It needs the real UI on real results.
 - **Check:** `post-master run examples/httpbin` (expect 7 PASS), `post-master lint examples/httpbin`, then `serve`.
 
-### 7. Safety net
-- Tests for the runner's core: asserts, variable lookup, redaction, lint. None exist today.
-- Add a LICENSE.
-- Commit `goal.txt` (currently untracked) or fold it into the README.
+### 7. Safety net — ✅ written (tests not yet run)
+- `tests/test_post_master.py`: about 70 tests, standard library only. They cover variables, redaction, request
+  building, every assert operator, the file format, lint, the folder list, and a full run against a local
+  fake API (pass, fail, expected error, unreachable service, token redaction).
+- `LICENSE`: MIT.
+- `goal.txt` is still untracked: the README now states the goal, so decide whether to commit or delete it.
+- **Check:** `python3 -m unittest discover -s tests -v` from the repo root. Needs `jq`; no network.
 
 ### 8. Ship v0
 - Tag `v0.1.0`, publish the install line, try it on a clean machine.
@@ -88,7 +91,7 @@ Decided: an install script for v0; a Go binary after v0 (step 9).
 | 4 | Skill uses the command ✅ | S | 2 |
 | 5 | Folder picker in UI ✅ | M | 2 |
 | 6 | Example + README ✅ (screenshot pending) | S | 3, 5 |
-| 7 | Tests, license | M | 1 |
+| 7 | Tests, license ✅ (run pending) | M | 1 |
 | 8 | Release | S | 1–7 |
 | 9 | Go binary | L | 8 |
 
