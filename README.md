@@ -6,6 +6,10 @@ review all of it in a browser UI.
 AI is good at testing APIs, but you should always be able to see exactly what it tested for you. post-master
 makes that the default: nothing is tested without leaving a file you can read, diff and re-run.
 
+![Suite overview: three endpoints, seven cases, all passing](docs/overview.jpg)
+
+![One case: the request sent, the response received, and the checks](docs/case.jpg)
+
 ## Install
 
 ```

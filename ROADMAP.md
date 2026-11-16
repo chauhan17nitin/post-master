@@ -59,11 +59,11 @@ Decided: an install script for v0; a Go binary after v0 (step 9).
 - A path with no suites shows a plain message and keeps the current folder.
 - **Check:** `post-master serve`, switch to another suite folder, paste a wrong path, restart with no argument.
 
-### 6. First-run experience — ✅ done, except the screenshot (example not yet run)
+### 6. First-run experience — ✅ done
 - `examples/httpbin/`: 7 cases across 3 endpoints of the public httpbin.org service. It ships unrun, so every
   case shows "not run" until `post-master run` is used on it.
 - README rewritten: what it is, install line, how to use it, the example, file layout, command table.
-- **Still to do:** add a screenshot of the UI to the README. It needs the real UI on real results.
+- Two screenshots of the real UI on the example's results are in `docs/` and shown in the README.
 - **Check:** `post-master run examples/httpbin` (expect 7 PASS), `post-master lint examples/httpbin`, then `serve`.
 
 ### 7. Safety net — ✅ written (tests not yet run)
@@ -90,7 +90,7 @@ Decided: an install script for v0; a Go binary after v0 (step 9).
 | 3 | One-line install ✅ | M | 2 |
 | 4 | Skill uses the command ✅ | S | 2 |
 | 5 | Folder picker in UI ✅ | M | 2 |
-| 6 | Example + README ✅ (screenshot pending) | S | 3, 5 |
+| 6 | Example + README ✅ | S | 3, 5 |
 | 7 | Tests, license ✅ (run pending) | M | 1 |
 | 8 | Release | S | 1–7 |
 | 9 | Go binary | L | 8 |

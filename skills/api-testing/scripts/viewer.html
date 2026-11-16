@@ -457,7 +457,8 @@ function renderSide() {
     S.closed[el.dataset.api] = false; goApi(el.dataset.feature, el.dataset.name);
   });
   $("tree").querySelectorAll(".row").forEach((el) => el.onclick = () => go(el.dataset.feature, el.dataset.file));
-  $("root").textContent = S.tree.root; $("root").title = S.tree.root;
+  // The footer truncates from the left (direction: rtl); the leading mark keeps the path's first "/" in place.
+  $("root").textContent = S.tree.root ? "‎" + tilde(S.tree.root) : ""; $("root").title = S.tree.root || "";
 }
 
 /* ---------- routing ---------- */
