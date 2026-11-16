@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>API Test Suite</title>
+<title>post-master</title>
 <style>
 :root {
   --bg: #ffffff; --text: #1b1c1f; --muted: #5b5f66; --faint: #767a82; --rule: #e4e5e8; --tint: #f2f3f5; --code-bg: #f6f7f9;
@@ -698,7 +698,7 @@ async function send(f, d, key) {
   if (S.sending) return;
   S.sending = true; renderCase();
   try {
-    S.live[key] = await api("/api/fire", { method: "POST", headers: { "Content-Type": "application/json", "X-Apitest": "1" }, body: JSON.stringify({ feature: f.key, file: d.file, env: S.env[f.key] || f.default_env }) });
+    S.live[key] = await api("/api/fire", { method: "POST", headers: { "Content-Type": "application/json", "X-Post-Master": "1" }, body: JSON.stringify({ feature: f.key, file: d.file, env: S.env[f.key] || f.default_env }) });
   } catch (e) { S.live[key] = { error: e.message, at: new Date().toISOString() }; }
   S.sending = false; S.view[key] = "live";
   if (S.caseData && S.caseData.file === d.file) renderCase();
@@ -846,16 +846,16 @@ function applyTheme(t) {
   $("theme").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.theme === t));
 }
 let theme = "system";
-try { theme = localStorage.getItem("apitest-theme") || "system"; } catch (e) {}
+try { theme = localStorage.getItem("post-master-theme") || localStorage.getItem("apitest-theme") || "system"; } catch (e) {}
 applyTheme(theme);
-$("theme").querySelectorAll("button").forEach((b) => b.onclick = () => { theme = b.dataset.theme; applyTheme(theme); try { localStorage.setItem("apitest-theme", theme); } catch (e) {} });
+$("theme").querySelectorAll("button").forEach((b) => b.onclick = () => { theme = b.dataset.theme; applyTheme(theme); try { localStorage.setItem("post-master-theme", theme); } catch (e) {} });
 window.addEventListener("hashchange", () => route(false));
 function setSide(w) { w = Math.max(260, Math.min(600, w)); document.body.style.setProperty("--side", w + "px"); return w; }
-try { const w = parseInt(localStorage.getItem("apitest-side"), 10); if (w) setSide(w); } catch (e) {}
+try { const w = parseInt(localStorage.getItem("post-master-side") || localStorage.getItem("apitest-side"), 10); if (w) setSide(w); } catch (e) {}
 $("resize").onmousedown = (e) => {
   e.preventDefault(); $("resize").classList.add("on");
   const move = (ev) => setSide(ev.clientX);
-  const up = (ev) => { document.removeEventListener("mousemove", move); document.removeEventListener("mouseup", up); $("resize").classList.remove("on"); try { localStorage.setItem("apitest-side", setSide(ev.clientX)); } catch (x) {} };
+  const up = (ev) => { document.removeEventListener("mousemove", move); document.removeEventListener("mouseup", up); $("resize").classList.remove("on"); try { localStorage.setItem("post-master-side", setSide(ev.clientX)); } catch (x) {} };
   document.addEventListener("mousemove", move); document.addEventListener("mouseup", up);
 };
 
