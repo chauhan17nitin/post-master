@@ -1,1 +1,4 @@
 _local/
+# written by `post-master run`; the example ships unrun
+runs.jsonl
+00-index.md

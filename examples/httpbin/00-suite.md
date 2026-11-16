@@ -38,7 +38,9 @@
   "default_headers": {
     "Content-Type": "application/json"
   },
-  "redact_keys": [],
+  "redact_keys": [
+    "origin"
+  ],
   "requests": {
     "echo": {
       "method": "POST",
