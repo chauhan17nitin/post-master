@@ -37,11 +37,14 @@ between the script and the goal.
 - Try it before the installer exists: `export PATH="$PWD/bin:$PATH"` from the repo root.
 - **Check:** `post-master --version`, `post-master --help`, `post-master server <folder>`.
 
-### 3. Install with one line, nothing else to set up
+### 3. Install with one line, nothing else to set up — ✅ done (tested in a sandbox, not from GitHub)
 Decided: an install script for v0; a Go binary after v0 (step 9).
-- `curl … | sh` puts `post-master` on PATH and installs the skill into `~/.claude/skills/`.
-- It relies on `python3` and `jq` already being on the machine; the installer checks for both and says
-  what is missing.
+- `install.sh`: `curl -fsSL https://raw.githubusercontent.com/chauhan17nitin/post-master/master/install.sh | sh`
+- Checks for `python3` (3.8+) and `jq` first and says what is missing; changes nothing if either is absent.
+- Files go to `~/.post-master`; `~/.local/bin/post-master` and `~/.claude/skills/api-testing` are links into it.
+  Running it again updates. An existing real skill folder is kept as a backup, never deleted.
+- **Works for others only once** the repo is public and this branch is merged to `master`.
+- **Check:** after that, run the curl line on your machine, then `post-master --version`.
 
 ### 4. Skill uses the command
 - `SKILL.md` calls `post-master …` instead of `python3 <skill dir>/scripts/apitest.py …`.
@@ -77,7 +80,7 @@ Today the folder is fixed when the server starts.
 |---|---|---|---|
 | 1 | One name ✅ | S | – |
 | 2 | `post-master` command ✅ | S | 1 |
-| 3 | One-line install | M | 2 |
+| 3 | One-line install ✅ | M | 2 |
 | 4 | Skill uses the command | S | 2 |
 | 5 | Folder picker in UI | M | 2 |
 | 6 | Example + README | S | 3, 5 |
