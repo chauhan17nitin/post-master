@@ -78,6 +78,9 @@ aside { position: relative; background: var(--side-bg); border-right: 1px solid 
 .feat.sel { background: var(--sel); }
 .feat .ico { width: 18px; height: 18px; border-radius: 5px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-size: 10px; font-weight: 700; flex: none; }
 .feat .t { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feat .car { color: var(--faint); font-size: 9px; padding: 4px 4px; margin: -4px -4px -4px -4px; transition: transform .12s; display: inline-block; flex: none; }
+.feat.closed .car { transform: rotate(-90deg); }
+.feat .cnt { color: var(--faint); font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; }
 .pill { font-size: 11px; font-weight: 600; padding: 0 6px; border-radius: 999px; line-height: 17px; }
 .pill.fail { color: var(--fail); background: var(--fail-tint); }
 .feat-err { padding: 0 16px 6px; font-size: 12px; color: var(--fail); }
@@ -273,7 +276,7 @@ table.runs { border-collapse: collapse; font-family: var(--mono); font-size: 12p
 <div class="toast" id="toast"></div>
 <script>
 "use strict";
-const S = { fold: {}, jvals: {}, tabPref: "rr", curTab: null, notesOpen: false, tree: null, sel: null, filter: "ALL", q: "", closed: {}, live: {}, view: {}, env: {}, tabs: {}, full: {}, sub: {}, hist: false, sending: false, flash: new Set(), caseData: null };
+const S = { fold: {}, jvals: {}, tabPref: "rr", curTab: null, notesOpen: false, tree: null, sel: null, filter: "ALL", q: "", closed: {}, closedF: {}, live: {}, view: {}, env: {}, tabs: {}, full: {}, sub: {}, hist: false, sending: false, flash: new Set(), caseData: null };
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const GLYPH = { PASS: ["✓", "c-pm"], FAIL: ["✗", "c-fail"], BLOCKED: ["■", "c-blocked"], NOT_RUN: ["○", "faint"], BROKEN: ["!", "c-fail"], RETIRED: ["", ""] };
@@ -412,8 +415,10 @@ function renderSide() {
     const fc = counts(allCases(f));
     const selF = S.sel && S.sel.feature === f.key && !S.sel.file && !S.sel.api;
     const initials = (f.title.match(/\b[A-Za-z]/g) || ["?"]).slice(0, 2).join("").toUpperCase();
-    h.push(`<div class="feat ${selF ? "sel" : ""}" data-feature="${esc(f.key)}" title="${esc(f.title + "\n" + f.key)}"><span class="ico">${esc(initials)}</span><span class="t">${esc(f.title)}</span>${titles[f.title] > 1 ? `<span class="faint mono" style="font-weight:400">${esc(f.key)}</span>` : ""}${fc.FAIL ? `<span class="pill fail">${fc.FAIL}</span>` : ""}</div>`);
+    const shut = S.closedF[f.key] && !S.q && S.filter === "ALL";   // a search or filter looks inside collapsed suites too
+    h.push(`<div class="feat ${selF ? "sel" : ""} ${shut ? "closed" : ""}" data-feature="${esc(f.key)}" aria-expanded="${shut ? "false" : "true"}" title="${esc(f.title + "\n" + f.key)}"><span class="car" data-car="1" title="Collapse / expand">▾</span><span class="ico">${esc(initials)}</span><span class="t">${esc(f.title)}</span>${titles[f.title] > 1 ? `<span class="faint mono" style="font-weight:400">${esc(f.key)}</span>` : ""}${fc.FAIL ? `<span class="pill fail">${fc.FAIL}</span>` : ""}${shut ? `<span class="cnt">${fc.total}</span>` : ""}</div>`);
     if (f.error) h.push(`<div class="feat-err">${esc(f.error)}</div>`);
+    if (shut) continue;
     for (const a of f.apis) {
       const vis = a.cases.filter(matches);
       if (!vis.length && (S.q || S.filter !== "ALL")) continue;
@@ -441,7 +446,12 @@ function renderSide() {
   }
   if (!shown && (S.q || S.filter !== "ALL")) h.push(`<div class="side-empty">${S.q ? `No cases match "${esc(S.q)}" · Esc to clear` : "No cases with this status."}</div>`);
   $("tree").innerHTML = h.join("");
-  $("tree").querySelectorAll(".feat").forEach((el) => el.onclick = () => go(el.dataset.feature));
+  $("tree").querySelectorAll(".feat").forEach((el) => el.onclick = (e) => {
+    // The arrow always folds. The name opens the suite's overview first; clicking it again folds.
+    const k = el.dataset.feature;
+    if (e.target.closest("[data-car]") || el.classList.contains("sel")) { S.closedF[k] = !S.closedF[k]; return renderSide(); }
+    S.closedF[k] = false; go(k);
+  });
   $("tree").querySelectorAll(".apih").forEach((el) => el.onclick = (e) => {
     if (e.target.closest("[data-car]")) { e.stopPropagation(); S.closed[el.dataset.api] = !S.closed[el.dataset.api]; return renderSide(); }
     S.closed[el.dataset.api] = false; goApi(el.dataset.feature, el.dataset.name);
@@ -465,7 +475,7 @@ async function route(refetchOnly) {
   S.sel = parseHash();
   if (!S.sel && S.tree.features.length) S.sel = { feature: S.tree.features[0].key, file: null, api: null };
   const changed = S.sel && S.sel.feature + "/" + S.sel.api + "/" + S.sel.file !== prev && !refetchOnly;
-  if (changed && S.sel.api) S.closed[S.sel.feature + "/" + S.sel.api] = false;
+  if (changed && S.sel.api) { S.closed[S.sel.feature + "/" + S.sel.api] = false; S.closedF[S.sel.feature] = false; }
   renderSide();
   const main = $("main");
   if (!S.tree.folder) { main.innerHTML = '<div class="page center">No folder open<div class="faint">Paste the path of the folder that holds your suites in the box on the left.</div></div>'; return; }
