@@ -29,10 +29,13 @@ between the script and the goal.
   `apitest:` markers inside scenario files are unchanged so existing suites keep working.
 - **Check:** `python3 skills/api-testing/scripts/post_master.py serve` on an existing suite, and one live "Send request".
 
-### 2. A real `post-master` command
-- `post-master serve <folder>` opens the UI. `server` works as an alias, since that is how the goal spells it.
-- Same subcommands as today: `root`, `init`, `new`, `run`, `lint`, `index`.
-- `post-master --version` and a clear `--help`.
+### 2. A real `post-master` command — ✅ done (not yet run; see "Check" below)
+- The script is executable and `bin/post-master` is a symlink to it, so it runs as a plain command.
+- `post-master serve <folder>` opens the UI; `server` is an alias, since that is how the goal spells it.
+- Same subcommands as before: `root`, `init`, `new`, `run`, `lint`, `index`, each with a help line.
+- `post-master --version` prints `post-master 0.1.0`.
+- Try it before the installer exists: `export PATH="$PWD/bin:$PATH"` from the repo root.
+- **Check:** `post-master --version`, `post-master --help`, `post-master server <folder>`.
 
 ### 3. Install with one line, nothing else to set up
 Decided: an install script for v0; a Go binary after v0 (step 9).
@@ -73,7 +76,7 @@ Today the folder is fixed when the server starts.
 | # | Step | Size | Needs |
 |---|---|---|---|
 | 1 | One name ✅ | S | – |
-| 2 | `post-master` command | S | 1 |
+| 2 | `post-master` command ✅ | S | 1 |
 | 3 | One-line install | M | 2 |
 | 4 | Skill uses the command | S | 2 |
 | 5 | Folder picker in UI | M | 2 |

@@ -5,7 +5,7 @@ Layout:  <root>/<feature>/<NN-api>/{setup,success,error}/<NN-slug>.md
 Each scenario is one .md file: a generated, Postman-like report on top, a hand-written `## Notes`
 section, then `## Definition` — a ```json block (definition + last_run) that is the source of truth.
 
-Commands:
+Usage: post-master <command> …   (`post-master <command> --help` for one command's options)
   root [--set PATH]                      show / remember the root folder for all features
   init  <feature-dir>                    create 00-suite.md, 00-index.md, .gitignore
   new   <feature>/<NN-api>/<setup|success|error>/<NN-slug>   create a scenario skeleton
@@ -28,6 +28,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+VERSION = "0.1.0"
 FORMAT = 1
 CONFIG_FILE = Path.home() / ".claude" / "post-master.json"
 OLD_CONFIG_FILE = Path.home() / ".claude" / "api-testing.json"   # pre-rename name; read as a fallback, never written
@@ -1193,7 +1194,7 @@ def cmd_serve(a):
     root, features = find_features(folder)
     if not features:
         sys.exit(f"no feature folders (with 00-suite.md) under {folder}")
-    html_file = Path(__file__).parent / "viewer.html"
+    html_file = Path(__file__).resolve().parent / "viewer.html"   # resolve: the command may be a symlink on PATH
     host = "127.0.0.1"
 
     class Handler(http.server.BaseHTTPRequestHandler):
@@ -1282,17 +1283,24 @@ def cmd_root(a):
 
 def main():
     p = argparse.ArgumentParser(prog="post-master", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    sub = p.add_subparsers(dest="cmd", required=True)
-    s = sub.add_parser("root"); s.add_argument("--set"); s.set_defaults(fn=cmd_root)
-    s = sub.add_parser("init"); s.add_argument("feature"); s.set_defaults(fn=cmd_init)
-    s = sub.add_parser("new"); s.add_argument("path"); s.set_defaults(fn=cmd_new)
-    s = sub.add_parser("run"); s.add_argument("feature"); s.add_argument("--env")
+    p.add_argument("--version", action="version", version=f"post-master {VERSION}")
+    sub = p.add_subparsers(dest="cmd", required=True, metavar="<command>")
+    s = sub.add_parser("root", help="show or set the root folder that holds all features")
+    s.add_argument("--set", metavar="PATH"); s.set_defaults(fn=cmd_root)
+    s = sub.add_parser("init", help="create a feature folder (suite, index, .gitignore)")
+    s.add_argument("feature"); s.set_defaults(fn=cmd_init)
+    s = sub.add_parser("new", help="create a scenario skeleton")
+    s.add_argument("path", help="<feature>/<NN-api>/<setup|success|error>/<NN-slug>"); s.set_defaults(fn=cmd_new)
+    s = sub.add_parser("run", help="run scenarios and write their reports")
+    s.add_argument("feature"); s.add_argument("--env")
     s.add_argument("--only", help="comma list of api numbers (02) or ids (02/05)")
     s.add_argument("--timeout", type=float, default=30); s.add_argument("--note")
     s.set_defaults(fn=cmd_run)
-    s = sub.add_parser("index"); s.add_argument("feature"); s.set_defaults(fn=cmd_index)
-    s = sub.add_parser("lint"); s.add_argument("feature"); s.set_defaults(fn=cmd_lint)
-    s = sub.add_parser("serve", help="read-only browser viewer for a root or feature folder")
+    s = sub.add_parser("index", help="regenerate 00-index.md")
+    s.add_argument("feature"); s.set_defaults(fn=cmd_index)
+    s = sub.add_parser("lint", help="validate files, numbering, folder vs status, secret leaks")
+    s.add_argument("feature"); s.set_defaults(fn=cmd_lint)
+    s = sub.add_parser("serve", aliases=["server"], help="read-only browser viewer for a root or feature folder")
     s.add_argument("folder", nargs="?", help="root or feature folder (default: saved root)")
     s.add_argument("--port", type=int, default=4777); s.add_argument("--timeout", type=float, default=30)
     s.add_argument("--no-open", action="store_true"); s.set_defaults(fn=cmd_serve)
