@@ -7,7 +7,7 @@
 # Run it again to update. Needs python3 (3.8+) and jq; nothing else.
 #
 # Optional settings (environment variables):
-#   POST_MASTER_REF    branch, tag or commit to install     (default: master)
+#   POST_MASTER_REF    branch, tag or commit to install     (default: the latest release)
 #   POST_MASTER_HOME   where the files are kept             (default: ~/.post-master)
 #   POST_MASTER_BIN    where the command is linked          (default: ~/.local/bin)
 #   CLAUDE_SKILLS_DIR  where the skill is linked            (default: ~/.claude/skills)
@@ -16,7 +16,7 @@
 set -eu
 
 REPO="chauhan17nitin/post-master"
-REF="${POST_MASTER_REF:-master}"
+REF="${POST_MASTER_REF:-}"          # empty: resolved to the latest release in pick_version
 HOME_DIR="${POST_MASTER_HOME:-$HOME/.post-master}"
 BIN_DIR="${POST_MASTER_BIN:-$HOME/.local/bin}"
 SKILLS_DIR="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
@@ -46,10 +46,20 @@ check_requirements() {
     || fail "python3 is older than 3.8. Nothing was changed."
 }
 
+pick_version() {
+  [ -z "$REF" ] || return 0
+  # github.com/<repo>/releases/latest redirects to …/releases/tag/<tag>; the last path part is the tag.
+  latest="$(curl -fsSLI -o /dev/null -w '%{url_effective}' "https://github.com/$REPO/releases/latest" 2>/dev/null || true)"
+  case "$latest" in
+    */releases/tag/*) REF="${latest##*/}" ;;
+    *) fail "could not find the latest release of $REPO. Check your connection, or set POST_MASTER_REF. Nothing was changed." ;;
+  esac
+}
+
 download() {
   TMP="$(mktemp -d)"
   trap 'rm -rf "$TMP"' EXIT
-  say "Downloading post-master ($REF)…"
+  say "Downloading post-master (${REF:-local file})…"
   curl -fsSL "${POST_MASTER_URL:-https://github.com/$REPO/archive/$REF.tar.gz}" -o "$TMP/src.tar.gz" \
     || fail "download failed (is '$REF' a real branch or tag of $REPO?). Nothing was changed."
   mkdir "$TMP/src"
@@ -113,6 +123,7 @@ report() {
 
 main() {
   check_requirements
+  [ -n "${POST_MASTER_URL:-}" ] || pick_version
   download
   install_files
   link_skill

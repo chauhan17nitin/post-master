@@ -17,7 +17,8 @@ curl -fsSL https://raw.githubusercontent.com/chauhan17nitin/post-master/master/i
 ```
 
 Needs `python3` (3.8+) and `jq`, nothing else. It puts the `post-master` command in `~/.local/bin` and links the
-skill into `~/.claude/skills/`; the files live in `~/.post-master`. Run it again to update.
+skill into `~/.claude/skills/`; the files live in `~/.post-master`. It installs the latest release, not the
+tip of `master`. Run it again to update.
 
 ## Use
 
