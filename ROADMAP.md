@@ -46,9 +46,11 @@ Decided: an install script for v0; a Go binary after v0 (step 9).
 - **Works for others only once** the repo is public and this branch is merged to `master`.
 - **Check:** after that, run the curl line on your machine, then `post-master --version`.
 
-### 4. Skill uses the command
-- `SKILL.md` calls `post-master …` instead of `python3 <skill dir>/scripts/apitest.py …`.
-- If the command is missing, the skill tells Claude to give the user the install line.
+### 4. Skill uses the command — ✅ done (not yet tried in a real Claude session)
+- `SKILL.md` calls `post-master …` directly and checks `post-master --version; jq --version` first.
+- Command missing: Claude falls back to the script bundled in the skill for that session, so testing still
+  works, and gives the user the install line. `jq` missing: Claude asks the user to install it.
+- **Check:** ask Claude to test an API once with `post-master` on PATH and once without.
 
 ### 5. Pick a folder from the UI
 Today the folder is fixed when the server starts.
@@ -81,7 +83,7 @@ Today the folder is fixed when the server starts.
 | 1 | One name ✅ | S | – |
 | 2 | `post-master` command ✅ | S | 1 |
 | 3 | One-line install ✅ | M | 2 |
-| 4 | Skill uses the command | S | 2 |
+| 4 | Skill uses the command ✅ | S | 2 |
 | 5 | Folder picker in UI | M | 2 |
 | 6 | Example + README | S | 3, 5 |
 | 7 | Tests, license | M | 1 |

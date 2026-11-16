@@ -8,8 +8,7 @@ description: Use when asked to test, hit, QA or verify API endpoints (REST/HTTP)
 ## Overview
 
 Every API test is saved as a scenario file and run by a script, so results are recorded the same way every time.
-The script (`scripts/post_master.py`, in this skill's base directory; stdlib Python + `jq`) makes the HTTP calls, checks the
-expectations, and writes the report. **You write definitions; the script decides PASS/FAIL and writes everything else.**
+The `post-master` command (stdlib Python + `jq`) makes the HTTP calls, checks the expectations, and writes the report. **You write definitions; the script decides PASS/FAIL and writes everything else.**
 
 ```
 <root>/<feature>/                     e.g. ~/api-testing/subscriptions/
@@ -28,8 +27,15 @@ Last run data JSON (script-owned; what the report and any UI render from).
 
 ## Workflow
 
-Below, `post-master` means `python3 <this skill's base directory>/scripts/post_master.py` — always type the full command
-(a `$T` shell variable does not word-split in zsh).
+**Before step 1**, run `post-master --version; jq --version` once.
+
+- It prints a version: use `post-master` as written below.
+- `post-master: command not found`: the command is not installed on PATH. For this session type
+  `python3 <this skill's base directory>/scripts/post_master.py` wherever `post-master` appears below — always the full
+  command (a `$T` shell variable does not word-split in zsh) — and tell the user once that this line installs it, so
+  they can run `post-master serve` themselves:
+  `curl -fsSL https://raw.githubusercontent.com/chauhan17nitin/post-master/master/install.sh | sh`
+- `jq: command not found`: ask the user to install it (`brew install jq` / `sudo apt install jq`) and stop until they have.
 
 1. **Root.** `post-master root`. If it prints `NOT SET`, ask the user which folder to save scenarios in, then `post-master root --set <path>`.
 2. **Feature folder.** Ask the user for the feature folder name (propose one, e.g. the ticket or feature slug). If it exists,
