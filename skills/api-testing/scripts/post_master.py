@@ -1185,15 +1185,62 @@ def fire(root, feature_key, file, env, timeout=30):
             "at": now_iso()}
 
 
+MAX_RECENT = 8
+
+
+def remember_folder(folder):
+    """Put `folder` first in the config's recent list. Best effort: a read-only home must not stop the viewer."""
+    try:
+        cfg = load_config()
+        cfg["recent"] = ([str(folder)] + [p for p in cfg.get("recent", []) if p != str(folder)])[:MAX_RECENT]
+        CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        CONFIG_FILE.write_text(json.dumps(cfg, indent=2))
+    except (OSError, ValueError):
+        pass
+
+
+def recent_folders():
+    try:
+        return [p for p in load_config().get("recent", []) if Path(p).is_dir()]
+    except (OSError, ValueError):
+        return []
+
+
 def cmd_serve(a):
     import http.server
     import threading
     import webbrowser
-    saved_root = load_config().get("root")
-    folder = Path(a.folder or saved_root or ".").expanduser().resolve()
-    root, features = find_features(folder)
-    if not features:
-        sys.exit(f"no feature folders (with 00-suite.md) under {folder}")
+    cfg = load_config()
+    start = a.folder or (cfg.get("recent") or [None])[0] or cfg.get("root")
+    state = {"cur": (None, None)}          # (folder the user opened, root that feature keys are relative to)
+
+    def open_folder(path, strict):
+        """Point the viewer at `path`. strict (a switch from the UI): refuse a path with nothing to show."""
+        if not str(path).strip():
+            raise ValueError("type a folder path")
+        folder = Path(str(path).strip()).expanduser().resolve()
+        root, features = find_features(folder)
+        if strict and not folder.is_dir():
+            raise ValueError(f"not a folder: {folder}")
+        if strict and not features:
+            raise ValueError(f"no suites in {folder} — open a folder that has a 00-suite.md, or the folder above it")
+        state["cur"] = (folder, root)
+        if features:
+            remember_folder(folder)
+
+    def tree():
+        folder = state["cur"][0]
+        t = tree_data(folder) if folder else {"root": None, "stamp": 0, "features": []}
+        t.update(folder=str(folder) if folder else None, recent=recent_folders(), home=str(Path.home()))
+        return t
+
+    def root():
+        if state["cur"][1] is None:
+            raise ValueError("no folder open")
+        return state["cur"][1]
+
+    if start:
+        open_folder(start, strict=False)
     html_file = Path(__file__).resolve().parent / "viewer.html"   # resolve: the command may be a symlink on PATH
     host = "127.0.0.1"
 
@@ -1223,11 +1270,11 @@ def cmd_serve(a):
                 if u.path == "/":
                     return self.reply(200, html_file.read_bytes(), "text/html")
                 if u.path == "/api/tree":
-                    return self.reply(200, tree_data(folder))
+                    return self.reply(200, tree())
                 if u.path == "/api/case":
-                    return self.reply(200, case_data(root, q["feature"], q["file"]))
+                    return self.reply(200, case_data(root(), q["feature"], q["file"]))
                 if u.path == "/api/full-response":
-                    return self.reply(200, full_response(root, q["feature"], q["file"]))
+                    return self.reply(200, full_response(root(), q["feature"], q["file"]))
                 return self.reply(404, {"error": "not found"})
             except (ValueError, KeyError, OSError) as e:
                 return self.reply(400, {"error": str(e)})
@@ -1235,11 +1282,14 @@ def cmd_serve(a):
         def do_POST(self):
             if not self.same_origin() or self.headers.get("X-Post-Master") != "1":
                 return self.reply(403, {"error": "forbidden"})
-            if self.path != "/api/fire":
-                return self.reply(404, {"error": "not found"})
             try:
                 body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
-                return self.reply(200, fire(root, body["feature"], body["file"], body.get("env"), a.timeout))
+                if self.path == "/api/fire":
+                    return self.reply(200, fire(root(), body["feature"], body["file"], body.get("env"), a.timeout))
+                if self.path == "/api/open":      # switch the folder being viewed; reads only, like everything here
+                    open_folder(body["path"], strict=True)
+                    return self.reply(200, tree())
+                return self.reply(404, {"error": "not found"})
             except (ValueError, KeyError, OSError) as e:
                 return self.reply(400, {"error": str(e)})
 
@@ -1253,7 +1303,8 @@ def cmd_serve(a):
     if server is None:
         sys.exit(f"no free port in {a.port}–{a.port + 19}")
     url = f"http://{host}:{server.server_port}/"
-    print(f"post-master viewer: {url}  (folder: {folder}) — read-only; Ctrl+C to stop")
+    where = f"folder: {state['cur'][0]}" if state["cur"][0] else "no folder yet — pick one in the browser"
+    print(f"post-master viewer: {url}  ({where}) — read-only; Ctrl+C to stop")
     if not a.no_open:
         def open_browser():
             if sys.platform == "darwin" and subprocess.run(["open", "-a", "Google Chrome", url],
@@ -1301,7 +1352,7 @@ def main():
     s = sub.add_parser("lint", help="validate files, numbering, folder vs status, secret leaks")
     s.add_argument("feature"); s.set_defaults(fn=cmd_lint)
     s = sub.add_parser("serve", aliases=["server"], help="read-only browser viewer for a root or feature folder")
-    s.add_argument("folder", nargs="?", help="root or feature folder (default: saved root)")
+    s.add_argument("folder", nargs="?", help="root or feature folder (default: the last one opened)")
     s.add_argument("--port", type=int, default=4777); s.add_argument("--timeout", type=float, default=30)
     s.add_argument("--no-open", action="store_true"); s.set_defaults(fn=cmd_serve)
     a = p.parse_args()

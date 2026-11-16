@@ -52,13 +52,12 @@ Decided: an install script for v0; a Go binary after v0 (step 9).
   works, and gives the user the install line. `jq` missing: Claude asks the user to install it.
 - **Check:** ask Claude to test an API once with `post-master` on PATH and once without.
 
-### 5. Pick a folder from the UI
-Today the folder is fixed when the server starts.
-- Folder bar at the top: current folder, a list of recent folders, a box to paste another path.
-- Server gets a "switch folder" call and remembers recents in the config file.
-- `post-master serve` with no folder opens the last one; with nothing saved, it shows the folder box instead
-  of exiting with an error.
-- A path that has no test suites shows a plain message, not a crash.
+### 5. Pick a folder from the UI — ✅ done (UI tested against a mock server; the Python side is not yet run)
+- Folder bar at the top of the sidebar: current folder, recent folders, and a box to paste another path.
+- Switching happens without a restart. The last 8 folders are remembered in `~/.claude/post-master.json`.
+- `post-master serve` with no folder opens the last one; with nothing saved, the UI opens on the folder box.
+- A path with no suites shows a plain message and keeps the current folder.
+- **Check:** `post-master serve`, switch to another suite folder, paste a wrong path, restart with no argument.
 
 ### 6. First-run experience
 - A small example suite (against a public echo API) so a new user sees a full UI in one minute.
@@ -84,7 +83,7 @@ Today the folder is fixed when the server starts.
 | 2 | `post-master` command ✅ | S | 1 |
 | 3 | One-line install ✅ | M | 2 |
 | 4 | Skill uses the command ✅ | S | 2 |
-| 5 | Folder picker in UI | M | 2 |
+| 5 | Folder picker in UI ✅ | M | 2 |
 | 6 | Example + README | S | 3, 5 |
 | 7 | Tests, license | M | 1 |
 | 8 | Release | S | 1–7 |
